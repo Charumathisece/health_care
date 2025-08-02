@@ -15,18 +15,16 @@ import {
   Fade,
   CircularProgress
 } from '@mui/material';
-import {
-  SendOutlined,
-  SmartToyOutlined,
-  PersonOutlined,
-  AutoAwesomeOutlined,
-  PsychologyOutlined,
-  FavoriteOutlined,
-  LightbulbOutlined,
-  SelfImprovementOutlined,
-  EmojiEmotionsOutlined,
-  RefreshOutlined
-} from '@mui/icons-material';
+import SendOutlined from '@mui/icons-material/SendOutlined';
+import SmartToyOutlined from '@mui/icons-material/SmartToyOutlined';
+import PersonOutlined from '@mui/icons-material/PersonOutlined';
+import AutoAwesomeOutlined from '@mui/icons-material/AutoAwesomeOutlined';
+import PsychologyOutlined from '@mui/icons-material/PsychologyOutlined';
+import FavoriteOutlined from '@mui/icons-material/FavoriteOutlined';
+import LightbulbOutlined from '@mui/icons-material/LightbulbOutlined';
+import SelfImprovementOutlined from '@mui/icons-material/SelfImprovementOutlined';
+import EmojiEmotionsOutlined from '@mui/icons-material/EmojiEmotionsOutlined';
+import RefreshOutlined from '@mui/icons-material/RefreshOutlined';
 import { motion } from 'framer-motion';
 import { useApp } from '../context/AppContext';
 import { colors } from '../theme/theme';

@@ -17,15 +17,13 @@ import {
   MenuItem,
   Fab
 } from '@mui/material';
-import {
-  BookOutlined,
-  AddOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  MoreVertOutlined,
-  LockOutlined,
-  PublicOutlined
-} from '@mui/icons-material';
+import BookOutlined from '@mui/icons-material/BookOutlined';
+import AddOutlined from '@mui/icons-material/AddOutlined';
+import EditOutlined from '@mui/icons-material/EditOutlined';
+import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
+import MoreVertOutlined from '@mui/icons-material/MoreVertOutlined';
+import LockOutlined from '@mui/icons-material/LockOutlined';
+import PublicOutlined from '@mui/icons-material/PublicOutlined';
 import { motion } from 'framer-motion';
 // ReactQuill removed due to React 19 compatibility issues
 import { useApp } from '../context/AppContext';
