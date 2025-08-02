@@ -691,7 +691,7 @@ export default function MoodLog() {
                           transform: 'translateY(-2px)'
                         },
                         transition: 'all 0.3s ease'
-                      }}>>
+                      }}>
                         <PlayArrowOutlined sx={{ mr: 2, color: colors.secondary }} />
                         <Box sx={{ flex: 1 }}>
                           <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
