@@ -21,12 +21,12 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useApp, actionTypes } from '../context/AppContext';
+import { useAuth } from '../hooks/useAuth.jsx';
 import { colors } from '../theme/theme';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { dispatch } = useApp();
+  const { login, loading, error } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -34,6 +34,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -75,17 +76,23 @@ export default function Login() {
     if (!validateForm()) return;
 
     setIsLoading(true);
+    setApiError(null);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      // Login user and navigate to home
-      dispatch({ 
-        type: actionTypes.LOGIN, 
-        payload: { name: formData.email.split('@')[0] } 
+    try {
+      // Call real backend API
+      const response = await login({
+        email: formData.email,
+        password: formData.password
       });
-      navigate('/home');
-    }, 1500);
+      
+      // Redirect to dashboard after successful login
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Login failed:', error);
+      setApiError(error.message || 'Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -144,6 +151,12 @@ export default function Login() {
               <Typography variant="h4" sx={{ mb: 3, fontWeight: 600, textAlign: 'center' }}>
                 Sign In
               </Typography>
+
+              {(apiError || error) && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {apiError || error}
+                </Alert>
+              )}
 
               <form onSubmit={handleSubmit}>
                 <TextField

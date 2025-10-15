@@ -18,6 +18,7 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { useApp } from '../context/AppContext';
 import { colors } from '../theme/theme';
+import { useNavigate } from 'react-router-dom';
 
 const moodEmojis = ['😭', '😢', '😟', '😕', '😐', '🙂', '😊', '😄', '😆', '🥰'];
 
@@ -110,6 +111,9 @@ export default function Dashboard() {
     }
   ];
 
+  // Use the useNavigate hook from react-router-dom
+  const navigate = useNavigate();
+
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" sx={{ mb: 1, fontWeight: 700 }}>
@@ -118,6 +122,45 @@ export default function Dashboard() {
       <Typography variant="h6" sx={{ color: colors.text.secondary, mb: 4 }}>
         Your mental wellness journey at a glance
       </Typography>
+
+      {/* Quick Navigation Buttons */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap' }}>
+        <Chip
+          label="Mood Log"
+          color="primary"
+          variant="outlined"
+          onClick={() => navigate('/mood')}
+          sx={{ cursor: 'pointer', fontWeight: 600 }}
+        />
+        <Chip
+          label="Journal"
+          color="secondary"
+          variant="outlined"
+          onClick={() => navigate('/journal')}
+          sx={{ cursor: 'pointer', fontWeight: 600 }}
+        />
+        <Chip
+          label="Analytics"
+          color="success"
+          variant="outlined"
+          onClick={() => navigate('/analytics')}
+          sx={{ cursor: 'pointer', fontWeight: 600 }}
+        />
+        <Chip
+          label="Calming Toolkit"
+          color="info"
+          variant="outlined"
+          onClick={() => navigate('/toolkit')}
+          sx={{ cursor: 'pointer', fontWeight: 600 }}
+        />
+        <Chip
+          label="Patient Details"
+          color="warning"
+          variant="outlined"
+          onClick={() => navigate('/patient-details')}
+          sx={{ cursor: 'pointer', fontWeight: 600 }}
+        />
+      </Box>
 
       {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>

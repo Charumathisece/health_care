@@ -13,122 +13,26 @@ import {
   CardContent,
   Divider,
   Fade,
-  CircularProgress
+  CircularProgress,
+  Alert
 } from '@mui/material';
-import SendOutlined from '@mui/icons-material/SendOutlined';
-import SmartToyOutlined from '@mui/icons-material/SmartToyOutlined';
-import PersonOutlined from '@mui/icons-material/PersonOutlined';
-import AutoAwesomeOutlined from '@mui/icons-material/AutoAwesomeOutlined';
-import PsychologyOutlined from '@mui/icons-material/PsychologyOutlined';
-import FavoriteOutlined from '@mui/icons-material/FavoriteOutlined';
-import LightbulbOutlined from '@mui/icons-material/LightbulbOutlined';
-import SelfImprovementOutlined from '@mui/icons-material/SelfImprovementOutlined';
-import EmojiEmotionsOutlined from '@mui/icons-material/EmojiEmotionsOutlined';
-import RefreshOutlined from '@mui/icons-material/RefreshOutlined';
+import {
+  SendOutlined,
+  SmartToyOutlined,
+  PersonOutlined,
+  AutoAwesomeOutlined,
+  PsychologyOutlined,
+  FavoriteOutlined,
+  LightbulbOutlined,
+  SelfImprovementOutlined,
+  EmojiEmotionsOutlined,
+  RefreshOutlined
+} from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { useApp } from '../context/AppContext';
+import { useAuth } from '../hooks/useAuth.jsx';
+import apiClient from '../services/api';
 import { colors } from '../theme/theme';
 import toast from 'react-hot-toast';
-
-// AI Responses Database - Simulated AI Mental Health Assistant
-const aiResponses = {
-  greetings: [
-    "Hello! I'm your AI mental health companion. I'm here to listen, support, and help you on your wellness journey. How are you feeling today?",
-    "Hi there! Welcome to our safe space. I'm here to provide support and guidance whenever you need it. What's on your mind?",
-    "Hello! I'm so glad you're here. Taking time for your mental health is important. How can I support you today?"
-  ],
-  
-  mood_responses: {
-    sad: [
-      "I hear that you're feeling sad, and I want you to know that your feelings are completely valid. Sadness is a natural human emotion, and it's okay to sit with it. Would you like to talk about what's contributing to these feelings?",
-      "Thank you for sharing that you're feeling sad. It takes courage to acknowledge difficult emotions. Remember that sadness, like all emotions, is temporary. What usually helps you feel a little better when you're going through tough times?"
-    ],
-    happy: [
-      "I'm so glad to hear you're feeling happy! That's wonderful. Happiness is such a beautiful emotion to experience. What's bringing you joy today? I'd love to celebrate with you!",
-      "How amazing that you're feeling happy! It's important to savor these positive moments. What's been going well in your life lately?"
-    ],
-    anxious: [
-      "I understand you're feeling anxious, and I want you to know that anxiety is very common and treatable. Let's take a moment together - can you try taking three deep breaths with me? In for 4, hold for 4, out for 6.",
-      "Anxiety can feel overwhelming, but you're not alone in this. Many people experience anxiety, and there are effective ways to manage it. What situations or thoughts tend to trigger your anxiety?"
-    ],
-    stressed: [
-      "Stress can feel really overwhelming. I'm here to help you work through it. Sometimes breaking things down into smaller, manageable pieces can help. What's the main source of your stress right now?",
-      "I hear that you're feeling stressed. That's a lot to carry. Let's think about some coping strategies together. Have you tried any relaxation techniques before?"
-    ]
-  },
-
-  supportive_responses: [
-    "You're incredibly brave for reaching out and sharing your feelings. That takes real strength.",
-    "I want you to know that you're not alone in this. Many people go through similar experiences, and there is hope.",
-    "Your feelings are valid, and you deserve support and compassion - especially from yourself.",
-    "It's okay to not have all the answers right now. Healing and growth take time, and that's perfectly normal.",
-    "You've taken an important step by being here and focusing on your mental health. That shows real self-awareness and care."
-  ],
-
-  coping_strategies: [
-    "Here are some gentle coping strategies you might try: deep breathing exercises, going for a short walk, listening to calming music, or writing in a journal. What feels most appealing to you right now?",
-    "Some helpful techniques include: practicing mindfulness, doing progressive muscle relaxation, calling a trusted friend, or engaging in a creative activity. Which of these resonates with you?",
-    "Consider trying: the 5-4-3-2-1 grounding technique (5 things you see, 4 you hear, 3 you touch, 2 you smell, 1 you taste), gentle stretching, or practicing self-compassion. What sounds most helpful?"
-  ],
-
-  encouragement: [
-    "You are stronger than you know, and you have the inner resources to get through this. I believe in you.",
-    "Every small step you take toward caring for your mental health matters. You're doing important work.",
-    "Remember that healing isn't linear - there will be ups and downs, and that's completely normal. Be patient with yourself.",
-    "You deserve happiness, peace, and all good things in life. Don't let anyone, including yourself, tell you otherwise."
-  ],
-
-  professional_help: [
-    "While I'm here to provide support, please remember that I'm an AI assistant and not a replacement for professional mental health care. If you're experiencing persistent difficulties, consider reaching out to a licensed therapist or counselor.",
-    "If you're having thoughts of self-harm or suicide, please reach out for immediate help: National Suicide Prevention Lifeline (988), Crisis Text Line (text HOME to 741741), or your local emergency services.",
-    "It's always okay to seek professional help. Therapists, counselors, and mental health professionals are trained to provide specialized support that can be incredibly valuable."
-  ]
-};
-
-// AI Response Generator
-const generateAIResponse = (userMessage, conversationHistory) => {
-  const message = userMessage.toLowerCase();
-  
-  // Greeting detection
-  if (message.includes('hello') || message.includes('hi') || message.includes('hey') || conversationHistory.length <= 1) {
-    return aiResponses.greetings[Math.floor(Math.random() * aiResponses.greetings.length)];
-  }
-  
-  // Mood detection
-  if (message.includes('sad') || message.includes('down') || message.includes('depressed')) {
-    return aiResponses.mood_responses.sad[Math.floor(Math.random() * aiResponses.mood_responses.sad.length)];
-  }
-  
-  if (message.includes('happy') || message.includes('good') || message.includes('great') || message.includes('wonderful')) {
-    return aiResponses.mood_responses.happy[Math.floor(Math.random() * aiResponses.mood_responses.happy.length)];
-  }
-  
-  if (message.includes('anxious') || message.includes('anxiety') || message.includes('worried') || message.includes('nervous')) {
-    return aiResponses.mood_responses.anxious[Math.floor(Math.random() * aiResponses.mood_responses.anxious.length)];
-  }
-  
-  if (message.includes('stressed') || message.includes('stress') || message.includes('overwhelmed')) {
-    return aiResponses.mood_responses.stressed[Math.floor(Math.random() * aiResponses.mood_responses.stressed.length)];
-  }
-  
-  // Help/coping strategies
-  if (message.includes('help') || message.includes('cope') || message.includes('what should i do')) {
-    return aiResponses.coping_strategies[Math.floor(Math.random() * aiResponses.coping_strategies.length)];
-  }
-  
-  // Professional help keywords
-  if (message.includes('therapist') || message.includes('professional') || message.includes('counselor')) {
-    return aiResponses.professional_help[Math.floor(Math.random() * aiResponses.professional_help.length)];
-  }
-  
-  // Default supportive response
-  const supportiveResponses = [
-    ...aiResponses.supportive_responses,
-    ...aiResponses.encouragement
-  ];
-  
-  return supportiveResponses[Math.floor(Math.random() * supportiveResponses.length)];
-};
 
 // Quick Action Prompts
 const quickPrompts = [
@@ -140,35 +44,102 @@ const quickPrompts = [
   { text: "Tell me something positive", icon: <AutoAwesomeOutlined /> }
 ];
 
+// Fallback AI responses for when backend is unavailable
+const fallbackResponses = [
+  "I'm here to listen and support you. Thank you for sharing with me.",
+  "Your feelings are valid, and it's important that you're taking care of your mental health.",
+  "Remember that you're not alone in this journey. Every step you take matters.",
+  "It's okay to have difficult days. What's important is that you're reaching out for support.",
+  "You're showing great strength by focusing on your wellbeing. I'm here to help however I can."
+];
+
 export default function AIChat() {
-  const { state } = useApp();
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      text: "Hello! I'm your AI mental health companion. I'm here to listen, support, and help you on your wellness journey. How are you feeling today?",
-      sender: 'ai',
-      timestamp: new Date().toISOString()
-    }
-  ]);
+  const { user } = useAuth();
+  const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [currentSession, setCurrentSession] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const messagesEndRef = useRef(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  // Initialize chat session on component mount
+  useEffect(() => {
+    initializeChatSession();
+  }, []);
 
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const initializeChatSession = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.createChatSession({
+        title: `Chat Session - ${new Date().toLocaleDateString()}`,
+        type: 'support'
+      });
+      setCurrentSession(response.session);
+      
+      // Add welcome message
+      const welcomeMessage = {
+        _id: 'welcome',
+        sender: 'ai',
+        content: "Hello! I'm your AI mental health companion. I'm here to listen, support, and help you on your wellness journey. How are you feeling today?",
+        timestamp: new Date().toISOString()
+      };
+      setMessages([welcomeMessage]);
+    } catch (error) {
+      console.error('Failed to initialize chat session:', error);
+      setError('Failed to start chat session');
+      // Add fallback welcome message
+      const fallbackMessage = {
+        _id: 'welcome-fallback',
+        sender: 'ai',
+        content: "Hello! I'm here to support you. While I'm having trouble connecting to my full capabilities right now, I can still listen and provide basic support. How are you feeling today?",
+        timestamp: new Date().toISOString()
+      };
+      setMessages([fallbackMessage]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const generateFallbackResponse = (userMessage) => {
+    const message = userMessage.toLowerCase();
+    
+    if (message.includes('anxious') || message.includes('anxiety')) {
+      return "I understand you're feeling anxious. Try taking a few deep breaths with me - in for 4 counts, hold for 4, out for 6. You're not alone in this feeling.";
+    }
+    
+    if (message.includes('sad') || message.includes('depressed')) {
+      return "I hear that you're feeling sad, and I want you to know that your feelings are completely valid. It's okay to sit with these emotions. Would you like to talk about what's on your mind?";
+    }
+    
+    if (message.includes('stressed') || message.includes('stress')) {
+      return "Stress can feel overwhelming. Let's try to break things down into smaller, manageable pieces. What's the main source of your stress right now?";
+    }
+    
+    if (message.includes('happy') || message.includes('good') || message.includes('great')) {
+      return "I'm so glad to hear you're feeling positive! It's wonderful to celebrate these moments. What's bringing you joy today?";
+    }
+    
+    // Return random supportive response
+    return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+  };
 
   const handleSendMessage = async (messageText = inputMessage) => {
     if (!messageText.trim()) return;
 
     const userMessage = {
-      id: Date.now(),
-      text: messageText,
+      _id: Date.now().toString(),
       sender: 'user',
+      content: messageText.trim(),
       timestamp: new Date().toISOString()
     };
 
@@ -176,19 +147,55 @@ export default function AIChat() {
     setInputMessage('');
     setIsTyping(true);
 
-    // Simulate AI thinking time
-    setTimeout(() => {
-      const aiResponse = generateAIResponse(messageText, messages);
-      const aiMessage = {
-        id: Date.now() + 1,
-        text: aiResponse,
-        sender: 'ai',
-        timestamp: new Date().toISOString()
-      };
+    try {
+      let aiResponse;
+      
+      if (currentSession) {
+        // Try to get AI response from backend
+        try {
+          const response = await apiClient.addChatMessage(currentSession._id, {
+            content: messageText.trim(),
+            sender: 'user'
+          });
+          
+          // In a real implementation, this would return an AI-generated response
+          // For now, we'll simulate an AI response
+          aiResponse = {
+            _id: Date.now().toString() + '_ai',
+            sender: 'ai',
+            content: generateFallbackResponse(messageText),
+            timestamp: new Date().toISOString()
+          };
+        } catch (apiError) {
+          console.error('API call failed, using fallback:', apiError);
+          aiResponse = {
+            _id: Date.now().toString() + '_fallback',
+            sender: 'ai',
+            content: generateFallbackResponse(messageText),
+            timestamp: new Date().toISOString()
+          };
+        }
+      } else {
+        // Use fallback response
+        aiResponse = {
+          _id: Date.now().toString() + '_fallback',
+          sender: 'ai',
+          content: generateFallbackResponse(messageText),
+          timestamp: new Date().toISOString()
+        };
+      }
 
-      setMessages(prev => [...prev, aiMessage]);
+      // Simulate typing delay
+      setTimeout(() => {
+        setMessages(prev => [...prev, aiResponse]);
+        setIsTyping(false);
+      }, 1000 + Math.random() * 2000);
+
+    } catch (error) {
+      console.error('Failed to send message:', error);
       setIsTyping(false);
-    }, 1500 + Math.random() * 1000); // 1.5-2.5 seconds delay
+      toast.error('Failed to send message');
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -198,176 +205,198 @@ export default function AIChat() {
     }
   };
 
-  const clearChat = () => {
-    setMessages([
-      {
-        id: 1,
-        text: "Hello! I'm your AI mental health companion. I'm here to listen, support, and help you on your wellness journey. How are you feeling today?",
-        sender: 'ai',
-        timestamp: new Date().toISOString()
-      }
-    ]);
-    toast.success('Chat cleared! Starting fresh conversation.');
+  const clearChat = async () => {
+    try {
+      setMessages([]);
+      await initializeChatSession();
+      toast.success('Chat cleared');
+    } catch (error) {
+      console.error('Failed to clear chat:', error);
+      toast.error('Failed to clear chat');
+    }
+  };
+
+  const formatTime = (timestamp) => {
+    return new Date(timestamp).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
-    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', p: 2 }}>
+    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', p: 3 }}>
       {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+              AI Mental Health Companion
+            </Typography>
+            <Typography variant="h6" sx={{ color: colors.text.secondary }}>
+              Your supportive AI assistant for mental wellness
+            </Typography>
+          </Box>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshOutlined />}
+            onClick={clearChat}
+            sx={{
+              borderColor: colors.primary,
+              color: colors.primary,
+              '&:hover': {
+                borderColor: colors.primaryDark,
+                backgroundColor: `${colors.primary}10`
+              }
+            }}
+          >
+            New Chat
+          </Button>
+        </Box>
+
+        {error && (
+          <Alert severity="warning" sx={{ mb: 3 }}>
+            {error} - Using offline mode with basic responses.
+          </Alert>
+        )}
+
+        {/* Quick Prompts */}
+        <Card sx={{ mb: 3, borderRadius: 2 }}>
+          <CardContent>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+              <AutoAwesomeOutlined sx={{ mr: 1, verticalAlign: 'middle' }} />
+              Quick Start Prompts
+            </Typography>
+            <Grid container spacing={1}>
+              {quickPrompts.map((prompt, index) => (
+                <Grid item xs={12} sm={6} md={4} key={index}>
+                  <Chip
+                    icon={prompt.icon}
+                    label={prompt.text}
+                    onClick={() => handleSendMessage(prompt.text)}
+                    variant="outlined"
+                    sx={{
+                      width: '100%',
+                      justifyContent: 'flex-start',
+                      borderColor: colors.primary,
+                      color: colors.text.primary,
+                      '&:hover': {
+                        backgroundColor: `${colors.primary}10`,
+                        borderColor: colors.primaryDark
+                      }
+                    }}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Messages Container */}
       <Paper 
         elevation={2} 
         sx={{ 
+          flex: 1, 
           p: 3, 
           mb: 2, 
-          background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.secondary}15 100%)`,
-          borderRadius: 3
+          borderRadius: 2, 
+          overflowY: 'auto',
+          backgroundColor: '#fafafa'
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Avatar sx={{ 
-              mr: 2, 
-              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`,
-              width: 56,
-              height: 56
-            }}>
-              <SmartToyOutlined sx={{ fontSize: 28 }} />
-            </Avatar>
-            <Box>
-              <Typography variant="h5" sx={{ fontWeight: 600, color: colors.primary }}>
-                AI Mental Health Assistant
-              </Typography>
-              <Typography variant="body2" sx={{ color: colors.text.secondary }}>
-                Your compassionate AI companion for mental wellness support
-              </Typography>
-            </Box>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+            <CircularProgress />
           </Box>
-          <Button
-            startIcon={<RefreshOutlined />}
-            onClick={clearChat}
-            sx={{ color: colors.secondary }}
-          >
-            Clear Chat
-          </Button>
-        </Box>
-      </Paper>
-
-      {/* Quick Action Prompts */}
-      <Paper elevation={1} sx={{ p: 2, mb: 2, borderRadius: 2 }}>
-        <Typography variant="subtitle2" sx={{ mb: 1, color: colors.text.secondary }}>
-          Quick Actions:
-        </Typography>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-          {quickPrompts.map((prompt, index) => (
-            <Chip
-              key={index}
-              icon={prompt.icon}
-              label={prompt.text}
-              onClick={() => handleSendMessage(prompt.text)}
-              sx={{
-                backgroundColor: `${colors.primary}10`,
-                color: colors.primary,
-                '&:hover': {
-                  backgroundColor: `${colors.primary}20`
-                }
-              }}
-            />
-          ))}
-        </Box>
-      </Paper>
-
-      {/* Chat Messages */}
-      <Paper 
-        elevation={1} 
-        sx={{ 
-          flex: 1, 
-          p: 2, 
-          mb: 2, 
-          overflow: 'auto',
-          background: '#fafafa',
-          borderRadius: 2
-        }}
-      >
-        {messages.map((message) => (
-          <motion.div
-            key={message.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start',
-                mb: 2
-              }}
-            >
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  maxWidth: '70%',
-                  flexDirection: message.sender === 'user' ? 'row-reverse' : 'row'
-                }}
+        ) : (
+          <>
+            {messages.map((message, index) => (
+              <motion.div
+                key={message._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
               >
-                <Avatar
+                <Box
                   sx={{
-                    mx: 1,
-                    width: 40,
-                    height: 40,
-                    backgroundColor: message.sender === 'user' ? colors.secondary : colors.primary
+                    display: 'flex',
+                    justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start',
+                    mb: 2
                   }}
                 >
-                  {message.sender === 'user' ? <PersonOutlined /> : <SmartToyOutlined />}
-                </Avatar>
-                <Paper
-                  elevation={2}
-                  sx={{
-                    p: 2,
-                    backgroundColor: message.sender === 'user' ? colors.secondary : 'white',
-                    color: message.sender === 'user' ? 'white' : colors.text.primary,
-                    borderRadius: 2,
-                    maxWidth: '100%'
-                  }}
-                >
-                  <Typography variant="body1" sx={{ lineHeight: 1.6 }}>
-                    {message.text}
-                  </Typography>
-                  <Typography 
-                    variant="caption" 
-                    sx={{ 
-                      mt: 1, 
-                      display: 'block',
-                      opacity: 0.7
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      maxWidth: '70%',
+                      flexDirection: message.sender === 'user' ? 'row-reverse' : 'row'
                     }}
                   >
-                    {new Date(message.timestamp).toLocaleTimeString()}
-                  </Typography>
-                </Paper>
-              </Box>
-            </Box>
-          </motion.div>
-        ))}
-        
-        {/* Typing Indicator */}
-        {isTyping && (
-          <Fade in={isTyping}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <Avatar sx={{ mr: 1, backgroundColor: colors.primary, width: 40, height: 40 }}>
-                <SmartToyOutlined />
-              </Avatar>
-              <Paper elevation={2} sx={{ p: 2, borderRadius: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <CircularProgress size={16} sx={{ mr: 1 }} />
-                  <Typography variant="body2" sx={{ color: colors.text.secondary }}>
-                    AI is thinking...
-                  </Typography>
+                    <Avatar
+                      sx={{
+                        mx: 1,
+                        width: 40,
+                        height: 40,
+                        backgroundColor: message.sender === 'user' ? colors.secondary : colors.primary
+                      }}
+                    >
+                      {message.sender === 'user' ? <PersonOutlined /> : <SmartToyOutlined />}
+                    </Avatar>
+                    <Paper
+                      elevation={2}
+                      sx={{
+                        p: 2,
+                        backgroundColor: message.sender === 'user' ? colors.secondary : 'white',
+                        color: message.sender === 'user' ? 'white' : colors.text.primary,
+                        borderRadius: 2,
+                        maxWidth: '100%'
+                      }}
+                    >
+                      <Typography variant="body1" sx={{ lineHeight: 1.6 }}>
+                        {message.content}
+                      </Typography>
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          mt: 1, 
+                          display: 'block',
+                          opacity: 0.7
+                        }}
+                      >
+                        {formatTime(message.timestamp)}
+                      </Typography>
+                    </Paper>
+                  </Box>
                 </Box>
-              </Paper>
-            </Box>
-          </Fade>
+              </motion.div>
+            ))}
+            
+            {/* Typing Indicator */}
+            {isTyping && (
+              <Fade in={isTyping}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Avatar sx={{ mr: 1, backgroundColor: colors.primary, width: 40, height: 40 }}>
+                    <SmartToyOutlined />
+                  </Avatar>
+                  <Paper elevation={2} sx={{ p: 2, borderRadius: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <CircularProgress size={16} sx={{ mr: 1 }} />
+                      <Typography variant="body2" sx={{ color: colors.text.secondary }}>
+                        AI is thinking...
+                      </Typography>
+                    </Box>
+                  </Paper>
+                </Box>
+              </Fade>
+            )}
+            
+            <div ref={messagesEndRef} />
+          </>
         )}
-        
-        <div ref={messagesEndRef} />
       </Paper>
 
       {/* Message Input */}

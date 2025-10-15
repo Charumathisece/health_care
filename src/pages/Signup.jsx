@@ -13,7 +13,8 @@ import {
   InputAdornment,
   FormControlLabel,
   Checkbox,
-  Alert
+  Alert,
+  Grid
 } from '@mui/material';
 import {
   VisibilityOutlined,
@@ -24,30 +25,47 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useApp, actionTypes } from '../context/AppContext';
+import { useAuth } from '../hooks/useAuth.jsx';
 import { colors } from '../theme/theme';
 
 export default function Signup() {
   const navigate = useNavigate();
-  const { dispatch } = useApp();
+  const { register, loading, error } = useAuth();
   const [formData, setFormData] = useState({
-    name: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
-    agreeToTerms: false
+    agreeToTerms: false,
+    profile: {
+      firstName: '',
+      lastName: ''
+    }
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'agreeToTerms' ? checked : value
-    }));
+    
+    if (name === 'firstName' || name === 'lastName') {
+      setFormData(prev => ({
+        ...prev,
+        profile: {
+          ...prev.profile,
+          [name]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: name === 'agreeToTerms' ? checked : value
+      }));
+    }
+    
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
@@ -55,15 +73,26 @@ export default function Signup() {
         [name]: ''
       }));
     }
+    setApiError(null);
   };
 
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters';
+    if (!formData.username.trim()) {
+      newErrors.username = 'Username is required';
+    } else if (formData.username.trim().length < 3) {
+      newErrors.username = 'Username must be at least 3 characters';
+    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+      newErrors.username = 'Username can only contain letters, numbers, and underscores';
+    }
+
+    if (!formData.profile.firstName.trim()) {
+      newErrors.firstName = 'First name is required';
+    }
+
+    if (!formData.profile.lastName.trim()) {
+      newErrors.lastName = 'Last name is required';
     }
 
     if (!formData.email) {
@@ -76,6 +105,8 @@ export default function Signup() {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
+    } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
+      newErrors.password = 'Password must contain at least one lowercase letter, one uppercase letter, and one number';
     }
 
     if (!formData.confirmPassword) {
@@ -98,30 +129,30 @@ export default function Signup() {
     if (!validateForm()) return;
 
     setIsLoading(true);
+    setApiError(null);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      // Login user after signup and navigate to home
-      dispatch({ 
-        type: actionTypes.LOGIN, 
-        payload: { name: formData.name } 
+    try {
+      // Call real backend API
+      const response = await register({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        profile: formData.profile
       });
-      navigate('/home');
-    }, 1500);
+      
+      // Redirect to dashboard after successful registration
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Registration failed:', error);
+      setApiError(error.message || 'Registration failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleSignup = () => {
-    // Simulate Google signup
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      dispatch({ 
-        type: actionTypes.LOGIN, 
-        payload: { name: 'Google User' } 
-      });
-      navigate('/home');
-    }, 1000);
+    // TODO: Implement Google OAuth integration
+    console.log('Google signup not yet implemented');
   };
 
   return (
@@ -168,15 +199,55 @@ export default function Signup() {
                 Create Account
               </Typography>
 
+              {(apiError || error) && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {apiError || error}
+                </Alert>
+              )}
+
               <form onSubmit={handleSubmit}>
+                {/* Name Fields */}
+                <Grid container spacing={2} sx={{ mb: 3 }}>
+                  <Grid item xs={6}>
+                    <TextField
+                      fullWidth
+                      name="firstName"
+                      label="First Name"
+                      value={formData.profile.firstName}
+                      onChange={handleChange}
+                      error={!!errors.firstName}
+                      helperText={errors.firstName}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <PersonOutlined sx={{ color: colors.primary }} />
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      fullWidth
+                      name="lastName"
+                      label="Last Name"
+                      value={formData.profile.lastName}
+                      onChange={handleChange}
+                      error={!!errors.lastName}
+                      helperText={errors.lastName}
+                    />
+                  </Grid>
+                </Grid>
+
+                {/* Username */}
                 <TextField
                   fullWidth
-                  name="name"
-                  label="Full Name"
-                  value={formData.name}
+                  name="username"
+                  label="Username"
+                  value={formData.username}
                   onChange={handleChange}
-                  error={!!errors.name}
-                  helperText={errors.name}
+                  error={!!errors.username}
+                  helperText={errors.username}
                   sx={{ mb: 3 }}
                   InputProps={{
                     startAdornment: (
@@ -187,6 +258,7 @@ export default function Signup() {
                   }}
                 />
 
+                {/* Email */}
                 <TextField
                   fullWidth
                   name="email"
@@ -206,6 +278,7 @@ export default function Signup() {
                   }}
                 />
 
+                {/* Password */}
                 <TextField
                   fullWidth
                   name="password"
@@ -235,6 +308,7 @@ export default function Signup() {
                   }}
                 />
 
+                {/* Confirm Password */}
                 <TextField
                   fullWidth
                   name="confirmPassword"
@@ -264,6 +338,7 @@ export default function Signup() {
                   }}
                 />
 
+                {/* Terms and Conditions */}
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -304,7 +379,7 @@ export default function Signup() {
                   fullWidth
                   variant="contained"
                   size="large"
-                  disabled={isLoading}
+                  disabled={isLoading || loading}
                   sx={{
                     py: 2,
                     mb: 3,
@@ -317,7 +392,7 @@ export default function Signup() {
                     }
                   }}
                 >
-                  {isLoading ? 'Creating Account...' : 'Create Account'}
+                  {(isLoading || loading) ? 'Creating Account...' : 'Create Account'}
                 </Button>
 
                 <Divider sx={{ mb: 3 }}>
@@ -331,7 +406,7 @@ export default function Signup() {
                   variant="outlined"
                   size="large"
                   onClick={handleGoogleSignup}
-                  disabled={isLoading}
+                  disabled={isLoading || loading}
                   sx={{
                     py: 2,
                     mb: 3,

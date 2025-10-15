@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider, CssBaseline, Box, useMediaQuery } from '@mui/material';
 import { Toaster } from 'react-hot-toast';
 import { theme } from './theme/theme';
 import { AppProvider, useApp } from './context/AppContext';
+import { AuthProvider, useAuth } from './hooks/useAuth.jsx';
 import Navbar from './components/Navigation/Navbar';
 import Sidebar from './components/Navigation/Sidebar';
 import Landing from './pages/Landing';
@@ -18,6 +19,9 @@ import Analytics from './pages/Analytics';
 import Profile from './pages/Profile';
 import CalmingToolkit from './pages/CalmingToolkit';
 import AIChat from './pages/AIChat';
+
+// Lazy load PatientDetails to avoid CommonJS `require` in the browser
+const PatientDetails = lazy(() => import('./pages/PatientDetails'));
 
 // Placeholder components for remaining pages
 const Reminders = () => (
@@ -47,6 +51,16 @@ function AppLayout() {
   const { state } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
+  // Get authentication status
+  let isAuthenticated = false;
+  try {
+    const authContext = useAuth();
+    isAuthenticated = authContext.isAuthenticated;
+  } catch (error) {
+    // If useAuth fails, fall back to false
+    console.log('Auth context not available, defaulting to unauthenticated');
+  }
 
   const handleSidebarToggle = () => {
     setSidebarOpen(!sidebarOpen);
@@ -60,7 +74,7 @@ function AppLayout() {
   const isPublicRoute = ['/', '/login', '/signup'].includes(location.pathname);
   
   // If user is not authenticated and trying to access protected route, redirect to landing
-  if (!state.isAuthenticated && !isPublicRoute) {
+  if (!isAuthenticated && !isPublicRoute) {
     return <Landing />;
   }
 
@@ -79,22 +93,20 @@ function AppLayout() {
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       <Navbar onMenuToggle={handleSidebarToggle} />
-      
       <Sidebar 
         open={sidebarOpen}
         onClose={handleSidebarClose}
-        variant={isMobile ? 'temporary' : 'temporary'} // Always temporary for modern UX
+        variant={isMobile ? 'temporary' : 'temporary'}
       />
-      
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          pt: '64px', // Account for navbar height
+          pt: '64px',
           minHeight: '100vh',
           backgroundColor: theme.palette.background.default,
           transition: 'all 0.3s ease',
-          width: '100%' // Full width since sidebar is overlay
+          width: '100%'
         }}
       >
         <Routes>
@@ -110,6 +122,14 @@ function AppLayout() {
           <Route path="/counselor" element={<CounselorConnect />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
+          <Route
+            path="/patient-details"
+            element={
+              <Suspense fallback={<Box sx={{ p: 3 }}>Loading patient details...</Box>}>
+                <PatientDetails />
+              </Suspense>
+            }
+          />
         </Routes>
       </Box>
     </Box>
@@ -120,10 +140,13 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AppProvider>
-        <Router>
-          <AppLayout />
-        </Router>
+      <AuthProvider>
+        <AppProvider>
+          <Router>
+            <AppLayout />
+          </Router>
+        </AppProvider>
+      </AuthProvider>
         
         <Toaster
           position="top-right"
@@ -143,7 +166,6 @@ function App() {
             }
           }}
         />
-      </AppProvider>
     </ThemeProvider>
   );
 }

@@ -59,8 +59,8 @@ import {
   HealthAndSafetyOutlined
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { useApp } from '../context/AppContext';
-import { actionTypes } from '../context/AppContext';
+import { useAuth } from '../hooks/useAuth.jsx';
+import apiClient from '../services/api';
 import { colors } from '../theme/theme';
 import toast from 'react-hot-toast';
 
@@ -152,22 +152,26 @@ const TabPanel = ({ children, value, index, ...other }) => (
 );
 
 export default function Profile() {
-  const { state, dispatch } = useApp();
+  const { user, updateProfile } = useAuth();
   const [tabValue, setTabValue] = useState(0);
   const [editProfile, setEditProfile] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: state.user.name || 'User',
-    email: 'user@soulscribe.com',
-    bio: 'On a journey of self-discovery and mental wellness.',
+    name: user?.profile?.firstName || user?.username || 'User',
+    email: user?.email || 'user@soulscribe.com',
+    bio: user?.profile?.bio || 'On a journey of self-discovery and mental wellness.',
     location: 'Your City',
-    joinDate: '2024-01-01'
+    joinDate: user?.createdAt ? new Date(user.createdAt).toISOString().split('T')[0] : '2024-01-01'
   });
-  const [settings, setSettings] = useState(state.settings);
+  const [settings, setSettings] = useState(user?.preferences || {
+    notifications: true,
+    darkMode: false,
+    privacy: 'private'
+  });
 
   // Calculate user statistics
   const userStats = useMemo(() => {
-    const totalMoodEntries = state.moods?.length || 0;
-    const totalJournalEntries = state.journalEntries?.length || 0;
+    const totalMoodEntries = 0; // Will be fetched from API
+    const totalJournalEntries = 0; // Will be fetched from API
     const totalWords = state.journalEntries?.reduce((sum, entry) => sum + (entry.wordCount || 0), 0) || 0;
     const avgMood = totalMoodEntries > 0 
       ? (state.moods.reduce((sum, mood) => sum + mood.rating, 0) / totalMoodEntries).toFixed(1)
@@ -219,22 +223,31 @@ export default function Profile() {
     });
   }, [userStats]);
 
-  const handleProfileUpdate = () => {
-    dispatch({
-      type: actionTypes.UPDATE_USER,
-      payload: { ...state.user, name: profileData.name }
-    });
-    setEditProfile(false);
-    toast.success('Profile updated successfully!');
+  const handleProfileUpdate = async () => {
+    try {
+      await updateProfile({
+        profile: {
+          firstName: profileData.name,
+          bio: profileData.bio
+        }
+      });
+      setEditProfile(false);
+      toast.success('Profile updated successfully!');
+    } catch (error) {
+      toast.error('Failed to update profile');
+    }
   };
 
-  const handleSettingsUpdate = (newSettings) => {
-    setSettings(newSettings);
-    dispatch({
-      type: actionTypes.UPDATE_SETTINGS,
-      payload: newSettings
-    });
-    toast.success('Settings updated successfully!');
+  const handleSettingsUpdate = async (newSettings) => {
+    try {
+      setSettings(newSettings);
+      await updateProfile({
+        preferences: newSettings
+      });
+      toast.success('Settings updated!');
+    } catch (error) {
+      toast.error('Failed to update settings');
+    }
   };
 
   const getAchievementProgress = (achievement) => {
